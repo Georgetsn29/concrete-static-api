@@ -15,7 +15,7 @@ router.route('/delete/:id').delete(deleteSocial);
 
 router.get("/crud", async (req, res) => {
     const socials = await Social.find().sort({ createdAt: -1 });
-    res.render("/api/v1/socials/crud", { socials });
+    res.render("socialCrud", { socials });
 });
 
 router.post("/crud/add", async (req, res) => {
