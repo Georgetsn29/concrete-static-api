@@ -6,13 +6,14 @@ import socialRouter from "./routes/Social.route.js"
 import bandMemberRouter from "./routes/BandMember.route.js"
 import tourRouter from "./routes/Tour.route.js"
 
+const app = express();
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const app = express();
-
+// This is the safest way to ensure Render finds the folder
+app.set("views", path.resolve(__dirname, "views")); 
 app.set("view engine", "ejs");
-app.set("views", path.join(__dirname, "views"));
 
 app.use(cors());
 
