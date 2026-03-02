@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Socials Admin</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 1000px; margin: 40px auto; background: #f4f7f6; padding: 20px; }
+        .container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);}
+        .header-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { 
+            text-align: left;
+            padding: 12px; 
+            font-size: 0.75rem; 
+            font-weight: 600; 
+            color: #64748b; 
+            text-transform: uppercase; 
+            letter-spacing: 0.05em;
+            border-bottom: 2px solid #f1f5f9;
+        }
+        td { padding: 12px; border-bottom: 1px solid #eee; vertical-align: middle; }
+        #searchInput { width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        .btn-primary { background: #6366f1; color: white; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .btn-primary:hover { background: #4f46e5; }
+        .btn-edit { color: #94a3b8; border: none; background: none; cursor: pointer; padding: 4px; }
+        .btn-edit:hover { color: #6366f1; }
+        .btn-del { color: #94a3b8; background: none; border: none; cursor: pointer; margin-left: 10px; }
+        .btn-del:hover { color: #e11d48; }
+        .btn-cancel { background: #f1f5f9; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; color: #64748b; }
+        dialog { border: none; border-radius: 12px; padding: 25px; width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        dialog::backdrop { background: rgba(0, 0, 0, 0.6); }
+        label { font-size: 12px; font-weight: 600; color: #64748b; display: block; margin-bottom: 4px; text-transform: uppercase; }
+        input, textarea { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-actions">
+        <h2>Socials Management</h2>
+        <button class="btn-primary" onclick="document.getElementById('addModal').showModal()">+ Add New Social</button>
+    </div>
+    
+    <div class="card">
+        <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Search by title or URL...">
+    </div>
+
+    <table>
+        <thead>
+            <tr><th>Title</th><th>URL</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+            <% socials.forEach(item => { %>
+                <tr>
+                    <td><strong><%= item.title %></strong></td>
+                    <td><small><%= item.URL %></small></td>
+                    <td>
+                        <button class="btn-edit action-edit-trigger" 
+                                data-item='<%- JSON.stringify(item) %>'>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                        </button>
+                        
+                        <form action="/api/v1/socials/crud/delete/<%= item._id %>" method="POST" style="display:inline;">
+                            <button type="submit" class="btn-del" onclick="return confirm('Delete this Social?')">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            <% }) %>
+        </tbody>
+    </table>
+</div>
+
+<dialog id="addModal">
+    <h3>Create New Social Link</h3>
+    <form action="/api/v1/socials/crud/add" method="POST">
+        <label>Title</label>
+        <input type="text" name="title" placeholder="e.g. SPOTIFY" required>
+        <label>URL</label>
+        <input type="text" name="URL" placeholder="https://..." required>
+        <label>Description</label>
+        <textarea name="description" placeholder="Short bio or link info" rows="3"></textarea>
+        
+        <div style="display: flex; gap: 10px; margin-top: 10px;">
+            <button type="submit" class="btn-primary">Create Link</button>
+            <button type="button" class="btn-cancel" onclick="document.getElementById('addModal').close()">Cancel</button>
+        </div>
+    </form>
+</dialog>
+
+<dialog id="editModal">
+    <h3>Edit Social Link</h3>
+    <form id="editForm" method="POST">
+        <label>Title</label>
+        <input type="text" name="title" id="modalTitle" required>
+        
+        <label>URL</label>
+        <input type="text" name="URL" id="modalURL" required>
+        
+        <label>Description</label>
+        <textarea name="description" id="modalDesc" rows="3"></textarea>
+        
+        <div style="display: flex; gap: 10px; margin-top: 10px;">
+            <button type="submit" class="btn-primary">Save Changes</button>
+            <button type="button" class="btn-cancel" onclick="document.getElementById('editModal').close()">Cancel</button>
+        </div>
+    </form>
+</dialog>
+
+<script>
+    document.querySelectorAll('.action-edit-trigger').forEach(button => {
+        button.addEventListener('click', function() {
+            handleButtonData(this.dataset.item);
+            const item = JSON.parse(this.dataset.item);
+            
+            const modal = document.getElementById('editModal');
+            const form = document.getElementById('editForm');
+            
+            form.action = `/api/v1/socials/crud/update/${item._id}`;
+            document.getElementById('modalTitle').value = item.title || '';
+            document.getElementById('modalURL').value = item.URL || '';
+            document.getElementById('modalDesc').value = item.description || '';
+            
+            modal.showModal();
+        });
+    });
+    function handleButtonData(itemData) {
+        var parsedData = JSON.parse(itemData)
+        // var URL = parsedData.URL
+        console.log("Item Data Title: ", parsedData);
+        console.log("Item Data URL: ", parsedData.URL);
+    }
+    function filterTable() {
+        const query = document.getElementById('searchInput').value.toLowerCase();
+        const rows = document.querySelectorAll('tbody tr');
+
+        rows.forEach(row => {
+            const title = row.cells[0].innerText.toLowerCase();
+            const url = row.cells[1].innerText.toLowerCase();
+            const match = title.includes(query) || url.includes(query);
+            row.style.display = match ? "" : "none";
+        });
+    }
+</script>
+
+</body>
+</html>

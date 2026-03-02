@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>BandMember Admin</title>
+    <style>
+         
+       body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 1000px; margin: 40px auto; background: #f4f7f6; padding: 20px; }
+
+        .container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);}
+
+        .header-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+
+        th { 
+            text-align: left;
+            padding: 12px; 
+            font-size: 0.75rem; 
+            font-weight: 600; 
+            color: #64748b; 
+            text-transform: uppercase; 
+            letter-spacing: 0.05em;
+            border-bottom: 2px solid #f1f5f9;
+        }
+
+        td { padding: 12px; border-bottom: 1px solid #eee; vertical-align: middle; }
+
+        #searchInput { width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+
+        .btn-primary { background: #6366f1; color: white; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+
+        .btn-primary:hover { background: #4f46e5; }
+
+        .btn-edit { color: #94a3b8; border: none; background: none; cursor: pointer; padding: 4px; }
+
+        .btn-edit:hover { color: #6366f1; }
+
+        .btn-del { color: #94a3b8; background: none; border: none; cursor: pointer; margin-left: 10px; }
+
+        .btn-del:hover { color: #e11d48; }
+
+        .btn-cancel { background: #f1f5f9; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; color: #64748b; }
+
+        dialog { border: none; border-radius: 12px; padding: 25px; width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+
+        dialog::backdrop { background: rgba(0, 0, 0, 0.6); }
+
+        label { font-size: 12px; font-weight: 600; color: #64748b; display: block; margin-bottom: 4px; text-transform: uppercase; }
+
+        input, textarea { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-actions">
+        <h2>BandMember Management</h2>
+        <button class="btn-primary" onclick="document.getElementById('addModal').showModal()">+ Add New Member</button>
+    </div>
+    <div class="card">
+    <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Search by title...">
+</div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>NAME</th>
+                <th>POSITION</th>
+                <th>DESCRIPTION</th>
+                <!-- <th>PATTERN</th> -->
+                <th>IMAGE URL</th>
+                <th>ACTIONS</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% bandMembers.forEach(item => { %>
+                <tr>
+                    <td><strong><%= item.name %></strong></td>
+                    <td><small><%= item.position %></small></td>
+                    <td><small><%= item.description.length > 30 ? item.description.substring(0, 30) + "..." : item.description %></small></td>
+                    <!-- <td><small><%= item.imagePattern %></small></td> -->
+                    <td><small><%= item.imageURL.length > 30 ? item.imageURL.substring(0, 30) + "..." : item.imageURL %></small></td>
+
+                    <td class="action-btn">
+                            <!-- <button class="btn-edit" onclick="openEditModal('<%= item._id %>', '<%= item.name %>', '<%= item.position %>', `<%= item.description %>`, '<%= item.imageURL %>')">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                            </button> -->
+
+                        <button class="btn-edit action-edit-trigger" 
+                                data-item='<%- JSON.stringify(item) %>'>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                        </button>
+                        
+                        <form action="/api/v1/bandMembers/crud/delete/<%= item._id %>" method="POST" style="display:inline;">
+                            <button type="submit" class="btn-del" onclick="return confirm('Delete this member?')">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            <% }) %>
+        </tbody>
+    </table>
+</div>
+
+<dialog id="addModal">
+    <h3>Create New Member</h3>
+    <form action="/api/v1/bandMembers/crud/add" method="POST">
+
+        <!-- <label>Id</label>
+        <input type="text" name="id" placeholder="ID (e.g. 01)" required> -->
+
+        <label>Name</label>
+        <input type="text" name="name" placeholder="Name" required>
+
+        <label>Position</label>
+        <input type="text" name="position" placeholder="Position">
+
+        <label>Description</label>
+        <textarea name="description" placeholder="Description" rows="3"></textarea>
+
+        <!-- <label>Img Pattern</label>
+        <input type="text" name="imagePattern" placeholder="bg-pattern-X"> -->
+
+        <label>Img URL</label>
+        <input type="text" name="imageURL" placeholder="Image URL">
+
+        <div style="display: flex; gap: 12px; margin-top: 10px;">
+        
+        <div style="display: flex; gap: 10px; margin-top: 10px;">
+            <button type="submit" class="btn-primary">Create</button>
+            <button type="button" class="btn-cancel" onclick="document.getElementById('addModal').close()">Cancel</button>
+        </div>
+    </form>
+</dialog>
+
+<dialog id="editModal">
+    <h3>Edit Member</h3>
+    <form id="editForm" method="POST">
+    <form id="editForm" method="POST">
+
+        <!-- <label>Id</label>
+        <input type="text" name="id" id="modalId" required> -->
+
+        <label>Name</label>
+        <input type="text" name="name" id="modalName" required>
+
+        <label>Position</label>
+        <input type="text" name="position" id="modalPos">
+
+        <label>Description</label>
+        <textarea name="description" id="modalDesc" rows="3"></textarea>
+
+        <!-- <label>Img Pattern</label>
+        <input type="text" name="imagePattern" id="modalPattern"> -->
+
+        <label>Img URL</label>
+        <input type="text" name="imageURL" id="modalURL">
+
+        <div style="display: flex; gap: 12px; margin-top: 10px;">
+            <button type="submit" class="btn-primary" style="flex:1">Save Changes</button>
+            <button type="button" class="btn-cancel" onclick="document.getElementById('editModal').close()">Cancel</button>
+        </div>
+    </form>
+</dialog>
+
+<script>
+    document.querySelectorAll('.action-edit-trigger').forEach(button => {
+        button.addEventListener('click', function() {
+            // handleButtonData(this.dataset.item);
+            const item = JSON.parse(this.dataset.item);
+
+            console.log(item);
+            
+            const modal = document.getElementById('editModal');
+            const form = document.getElementById('editForm');
+            
+            form.action = `/api/v1/bandMembers/crud/update/${item._id}`;
+            // document.getElementById('modalId').value = id;
+            document.getElementById('modalName').value = item.name;
+            document.getElementById('modalPos').value = item.position;
+            document.getElementById('modalDesc').value = item.description;
+            // document.getElementById('modalPattern').value = imagePattern;
+            document.getElementById('modalURL').value = item.imageURL;
+                
+                modal.showModal();
+            });
+    });
+
+
+    function filterTable() {
+        const query = document.getElementById('searchInput').value.toLowerCase();
+        const rows = document.querySelectorAll('tbody tr');
+
+        rows.forEach(row => {
+            // Get text from specific cells (adjust indices to match your table columns)
+            const title = row.cells[0].innerText.toLowerCase();
+            const location = row.cells[1].innerText.toLowerCase(); // City/Venue usually combined here
+
+            // The 'some' logic translated to DOM checking
+            const match = title.includes(query) || location.includes(query);
+            
+            row.style.display = match ? "" : "none";
+        });
+    }
+</script>
+
+</body>
+</html>

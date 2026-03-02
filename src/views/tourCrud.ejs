@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tour Admin</title>
+    <style>
+        /* General Layout */
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 1000px; margin: 40px auto; background: #f4f7f6; padding: 20px; }
+        .container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);}
+        .header-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        
+        /* Table Styling */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { text-align: left; padding: 12px; font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 2px solid #f1f5f9; }
+        td { padding: 12px; border-bottom: 1px solid #eee; vertical-align: middle; }
+
+        /* Controls Row */
+        .controls-row { display: flex; gap: 15px; align-items: center; margin-bottom: 20px; }
+        #searchInput { flex-grow: 1; padding: 12px; border: 1px solid #ddd; border-radius: 8px; outline: none; margin-bottom: 0; }
+        .sort-container { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+        .sort-select { border: 1px solid #ddd; border-radius: 8px; padding: 10px; font-size: 14px; outline: none; background: white; cursor: pointer; color: #64748b; }
+        
+        /* Progress Bar */
+        .progress-track { width: 64px; background-color: #f1f5f9; border-radius: 999px; height: 6px; margin-right: 12px; overflow: hidden; display: inline-block; }
+        .progress-fill { height: 100%; border-radius: 999px; transition: width 0.5s ease; }
+        .bg-emerald { background-color: #10b981; }
+        .bg-orange { background-color: #f97316; }
+        .bg-red { background-color: #e11d48; }
+        .flex-items-center { display: flex; align-items: center; }
+
+        /* Buttons */
+        .btn-primary { background: #6366f1; color: white; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .btn-edit { color: #94a3b8; border: none; background: none; cursor: pointer; padding: 4px; }
+        .btn-edit:hover { color: #6366f1; }
+        .btn-del { color: #94a3b8; background: none; border: none; cursor: pointer; margin-left: 10px; }
+        .btn-del:hover { color: #e11d48; }
+        .btn-cancel { background: #f1f5f9; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; color: #64748b; }
+
+        /* Modal & Two-Column Grid */
+        dialog { border: none; border-radius: 12px; padding: 25px; width: 550px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        dialog::backdrop { background: rgba(0, 0, 0, 0.6); }
+        
+        .grid-container { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 15px; 
+            margin-bottom: 20px;
+        }
+        
+        .full-width { grid-column: span 2; }
+        
+        label { font-size: 11px; font-weight: 600; color: #64748b; display: block; margin-bottom: 4px; text-transform: uppercase; }
+        input, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        textarea { resize: vertical; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-actions">
+        <h2>Tour Management</h2>
+        <button class="btn-primary" onclick="document.getElementById('addModal').showModal()">+ Add New Member</button>
+    </div>
+
+    <div class="controls-row">
+        <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Search Tours by Location or details...">
+        <div class="sort-container">
+            <span style="font-size: 14px; color: #64748b; font-weight: 500;">Sort by:</span>
+            <select id="sortSelect" onchange="sortTable()" class="sort-select">
+                <option value="0">Title</option>
+                <option value="1">City</option>
+                <option value="2">Date</option>
+                <option value="3">Quantity</option>
+            </select>
+        </div>
+    </div>
+
+    <table id="tourTable">
+        <thead>
+            <tr>
+                <th>Details</th>
+                <th>Location</th>
+                <th>Schedule</th>
+                <th>Inventory</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% tours.forEach(item => { %>
+                <tr>
+                    <td>
+                        <div style="font-weight: 600;"><%= item.title %></div>
+                        <small style="color: #64748b;">#<%= item.id %></small>
+                    </td>
+                    <td>
+                        <div><%= item.city %></div>
+                        <small style="color: #64748b;"><%= item.venue %></small>
+                    </td>
+                    <td>
+                        <div><%= item.date %></div>
+                        <small style="color: #64748b;"><%= item.startTime %></small>
+                    </td>
+                    <td>
+                        <div class="flex-items-center">
+                            <div class="progress-track">
+                                <div class="progress-fill <%= item.quantity > 100 ? 'bg-emerald' : (item.quantity > 10 ? 'bg-orange' : 'bg-red') %>" 
+                                     style="width: <%= Math.min(100, (item.quantity / 500) * 100) %>%">
+                                </div>
+                            </div>
+                            <span class="quantity-value" style="font-size: 14px; font-weight: 500;"><%= item.quantity %></span>
+                        </div>
+                    </td>
+                    <td>
+                        <div style="display: flex; align-items: center;">
+                            <button class="btn-edit" 
+                                onclick="openEditModal('<%= item._id %>', '<%= item.id %>', '<%= item.title %>', '<%= item.city %>', '<%= item.venue %>', '<%= item.description %>', '<%= item.quantity %>', '<%= item.startTime %>', '<%= item.date %>', '<%= item.durationMinutes %>')">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                            </button>
+                            <form action="/api/v1/tours/crud/delete/<%= item._id %>" method="POST" style="display:inline;">
+                                <button type="submit" class="btn-del" onclick="return confirm('Delete this member?')">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            <% }) %>
+        </tbody>
+    </table>
+</div>
+
+<dialog id="addModal">
+    <h3>Create New Member</h3>
+    <form action="/api/v1/tours/crud/add" method="POST">
+        <div class="grid-container">
+            <!-- <div><label>ID</label><input type="text" name="id" required></div> -->
+            <div><label>Title</label><input type="text" name="title" required></div>
+            <div><label>Date</label><input type="date" name="date" required></div>
+            <div><label>Start Time</label><input type="time" name="startTime" required></div>
+            <div><label>City</label><input type="text" name="city" required></div>
+            <div><label>Venue</label><input type="text" name="venue" required></div>
+            <div><label>Duration Minutes</label><input type="number" name="durationMinutes" required></div>
+            <div><label>Quantity</label><input type="number" name="quantity" required></div>
+            <div class="full-width"><label>Description</label><textarea name="description" rows="3"></textarea></div>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <button type="submit" class="btn-primary" style="flex:1">Create</button>
+            <button type="button" class="btn-cancel" onclick="document.getElementById('addModal').close()">Cancel</button>
+        </div>
+    </form>
+</dialog>
+
+<dialog id="editModal">
+    <h3>Edit Member</h3>
+    <form id="editForm" method="POST">
+        <div class="grid-container">
+            <!-- <div><label>ID</label><input type="text" name="id" id="editModalId" required></div> -->
+            <div><label>Title</label><input type="text" name="title" id="editModalTitle" required></div>
+            <div><label>Date</label><input type="date" name="date" id="editModalDate"></div>
+            <div><label>Start Time</label><input type="time" name="startTime" id="editModalStartTime"></div>
+            <div><label>City</label><input type="text" name="city" id="editModalCity"></div>
+            <div><label>Venue</label><input type="text" name="venue" id="editModalVenue"></div>
+            <div><label>Duration Minutes</label><input type="number" name="durationMinutes" id="editModalDurationMinutes"></div>
+            <div><label>Quantity</label><input type="number" name="quantity" id="editModalQuantity"></div>
+            <div class="full-width"><label>Description</label><textarea name="description" id="editModalDesc" rows="3"></textarea></div>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <button type="submit" class="btn-primary" style="flex:1">Save Changes</button>
+            <button type="button" class="btn-cancel" onclick="document.getElementById('editModal').close()">Cancel</button>
+        </div>
+    </form>
+</dialog>
+
+<script>
+    function openEditModal(_id, id, title, city, venue, description, quantity, startTime, date, durationMinutes) {
+        const modal = document.getElementById('editModal');
+        const form = document.getElementById('editForm');
+        form.action = `/api/v1/tours/crud/update/${_id}`;
+        // document.getElementById('editModalId').value = id;
+        document.getElementById('editModalTitle').value = title;
+        document.getElementById('editModalCity').value = city;
+        document.getElementById('editModalVenue').value = venue;
+        document.getElementById('editModalDesc').value = description;
+        document.getElementById('editModalQuantity').value = quantity;
+        document.getElementById('editModalDurationMinutes').value = durationMinutes;
+        document.getElementById('editModalDate').value = date;
+        document.getElementById('editModalStartTime').value = startTime;
+        modal.showModal();
+    }
+
+    function filterTable() {
+        const query = document.getElementById('searchInput').value.toLowerCase();
+        const rows = document.querySelectorAll('tbody tr');
+        rows.forEach(row => {
+            const text = row.innerText.toLowerCase();
+            row.style.display = text.includes(query) ? "" : "none";
+        });
+    }
+
+    function sortTable() {
+        const table = document.querySelector("#tourTable tbody");
+        const rows = Array.from(table.rows);
+        const columnIndex = parseInt(document.getElementById("sortSelect").value);
+        const sortedRows = rows.sort((a, b) => {
+            let valA, valB;
+            if (columnIndex === 3) {
+                valA = a.cells[columnIndex].querySelector('.quantity-value').innerText;
+                valB = b.cells[columnIndex].querySelector('.quantity-value').innerText;
+                return parseInt(valA) - parseInt(valB);
+            } else {
+                valA = a.cells[columnIndex].innerText.trim().toLowerCase();
+                valB = b.cells[columnIndex].innerText.trim().toLowerCase();
+                return valA.localeCompare(valB);
+            }
+        });
+        table.innerHTML = "";
+        table.append(...sortedRows);
+    }
+</script>
+
+</body>
+</html>
