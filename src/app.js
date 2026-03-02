@@ -30,7 +30,7 @@ app.use("/api/v1/bandMembers", bandMemberRouter);
 app.use("/api/v1/tours", tourRouter);
 
 app.get("/", (req, res) => {
-    res.send("<h1>Concrete Static API is Live</h1><p>Visit /api/v1/socials/crud for admin.</p>");
+    res.send("<h1>Concrete Static API is Live</h1><p>Visit /api/v1/socials/crud for home.</p><p>Visit /api/v1/bandMembers/crud for about.</p><p>Visit /api/v1/tours/crud for tour dated.</p>");
 });
 
 
