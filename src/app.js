@@ -14,10 +14,8 @@ const app = express();
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 
-app.use(CORS({
-    origin: "https://concrete-static.onrender.com/",
-    credentials: true
-}));
+const cors = require('cors');
+app.use(cors());
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -27,9 +25,9 @@ app.use((req, res, next) => {
     next();
 });
 
-app.use("/api/v1/socials", socialRouter);
-app.use("/api/v1/bandMembers", bandMemberRouter);
-app.use("/api/v1/tours", tourRouter);
+app.use("/socials", socialRouter);
+app.use("/bandMembers", bandMemberRouter);
+app.use("/tours", tourRouter);
 
 
 export default app;
