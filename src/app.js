@@ -29,5 +29,9 @@ app.use("/api/v1/socials", socialRouter);
 app.use("/api/v1/bandMembers", bandMemberRouter);
 app.use("/api/v1/tours", tourRouter);
 
+app.get("/", (req, res) => {
+    res.send("<h1>Concrete Static API is Live</h1><p>Visit /api/v1/socials/crud for admin.</p>");
+});
+
 
 export default app;
