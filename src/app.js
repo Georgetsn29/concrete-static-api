@@ -24,9 +24,9 @@ app.use((req, res, next) => {
     next();
 });
 
-app.use("/socials", socialRouter);
-app.use("/bandMembers", bandMemberRouter);
-app.use("/tours", tourRouter);
+app.use("/api/v1/socials", socialRouter);
+app.use("/api/v1/bandMembers", bandMemberRouter);
+app.use("/api/v1/tours", tourRouter);
 
 
 export default app;
