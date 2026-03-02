@@ -14,8 +14,14 @@ router.route('/delete/:id').delete(deleteSocial);
 
 
 router.get("/crud", async (req, res) => {
-    const socials = await Social.find().sort({ createdAt: -1 });
-    res.render("socialCrud", { socials });
+    try {
+        const socials = await Social.find().sort({ createdAt: -1 });
+        // MUST match filename "socialCrud.ejs" exactly
+        res.render("socialCrud", { socials }); 
+    } catch (error) {
+        console.error("CRUD Render Error:", error);
+        res.status(500).send("Database or Template Error: " + error.message);
+    }
 });
 
 router.post("/crud/add", async (req, res) => {
